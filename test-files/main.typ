@@ -1,16 +1,17 @@
+#import "prelude.typ": *
+#show: note
+#meta(label: "Main Document", parent: [[other.typ]])
+
 = Main Document
 
-This is the main document with links to other files.
+Here we link to [[other:euler-formula]].
 
-Check out the [[other:Introduction]] section.
+And here is a link to just [[other]] file.
 
-Also see the [[docs/example:Example Section]] for more details.
+[[other:euler-formula]]
 
-For configuration, look at [[config:Settings]].
+[[other:custom-section]]
 
-== Sample Content
+#lorem(1000)
 
-Some content here...
 
-// This is a comment
-More content follows.

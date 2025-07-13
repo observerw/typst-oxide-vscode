@@ -1,12 +1,14 @@
 = Other Document
 
-== Introduction
+Here is the euler formula:
 
-This is the introduction section that can be linked from other documents.
+$
+  e^(i pi) + 1 = 0
+$ <euler-formula>
 
-== More Content
+== Section with Label
 
-Additional content here...
+This is a section with a custom label <custom-section>.
 
-// Settings
-Configuration details...
+// Important note
+This is an important note <important-note>.

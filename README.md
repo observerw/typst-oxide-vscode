@@ -1,71 +1,122 @@
-# typst-oxide README
+# Typst-Oxide
 
-This is the README for your extension "typst-oxide". After writing up a brief description, we recommend including the following sections.
+A VS Code extension that adds powerful wiki-style linking capabilities to Typst files, enabling seamless navigation between documents and quick access to labels within files.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+### 🔗 Wiki Links
 
-For example if there is an image subfolder under your extension project workspace:
+Create links between Typst files using simple wiki-style syntax:
 
-\!\[feature X\]\(images/feature-x.png\)
+- `[[path/to/file]]` - Link to another Typst file
+- `[[path/to/file:label]]` - Link to a specific label within a file
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+### 🎯 Smart Autocompletion
+
+- **File path completion**: Press `[[` and start typing to see available `.typ` files
+- **Label completion**: After typing `:` in a wiki link, see all available labels in the target file
+
+### ⚡ Quick Navigation
+
+- Click on any wiki link to navigate to the target file
+- Jump directly to specific labels within files
+- Automatic file creation for missing links
+- Smart label suggestions when labels don't exist
+
+### 🔍 Label Detection
+
+Automatically detects and provides completions for:
+
+- **Typst labels**: `<label-name>` syntax
+- **Headings**: `= Title`, `== Subtitle`, etc.
+- **Comments**: `// Important note` or `/* Block comment */`
+
+### ✅ Link Validation
+
+- Real-time validation of wiki links
+- Warnings for broken file paths
+- Warnings for missing labels
+- Quick fixes for common issues
+
+## Usage
+
+### Basic Wiki Links
+
+```typst
+// Link to another file
+See [[chapter/introduction]] for more details.
+
+// Link to a specific label
+As shown in [[math:euler-formula]], we have...
+```
+
+### Autocompletion
+
+1. Type `[[` to start a wiki link
+2. Start typing a file path to see completions
+3. Type `:` after the file path to see label completions
+4. Select from the suggestions or continue typing
+
+### Supported Label Types
+
+```typst
+// Typst labels
+$ e^(i pi) + 1 = 0 $ <euler-formula>
+
+// Headings automatically become labels
+= Introduction <intro>
+This creates a label "Introduction"
+```
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+- Visual Studio Code 1.74.0 or higher
+- Typst files (`.typ` extension)
+- No additional dependencies required
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+This extension currently doesn't add any custom settings. All features work out of the box with sensible defaults.
 
-For example:
+## Examples
 
-This extension contributes the following settings:
+### File Structure
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+```text
+project/
+├── main.typ
+├── chapter/
+│   ├── introduction.typ
+│   └── conclusion.typ
+└── math/
+    └── formulas.typ
+```
 
-## Known Issues
+### Using Wiki Links
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+In `main.typ`:
 
-## Release Notes
+```typst
+= My Document
 
-Users appreciate release notes as you update your extension.
+See [[chapter/introduction]] for the introduction.
+Check [[math/formulas:euler-formula]] for the famous equation.
+```
 
-### 1.0.0
+In `math/formulas.typ`:
 
-Initial release of ...
+```typst
+= Mathematical Formulas
 
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
+$ e^(i pi) + 1 = 0 $ <euler-formula>
+```
 
 ---
 
-## Following extension guidelines
+## Contributing
 
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
+Contributions are welcome! Please feel free to submit issues or pull requests on the GitHub repository.
 
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
+## License
 
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+MIT License - see LICENSE file for details.
