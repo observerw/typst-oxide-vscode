@@ -33,6 +33,10 @@
         "command": "typst-oxide.refreshLinks",
         "title": "Refresh Links",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "typst-oxide.initRepository",
+        "title": "Initialize Typst-Oxide Repository"
       }
     ],
     "views": {
@@ -40,7 +44,7 @@
         {
           "id": "typst-oxide.links",
           "name": "Wiki Links",
-          "when": "resourceLangId == typst"
+          "when": "resourceLangId == typst && typst-oxide.repositoryExists"
         }
       ]
     },
@@ -49,7 +53,8 @@
         {
           "id": "typst-oxide",
           "title": "Typst Links",
-          "icon": "$(link)"
+          "icon": "$(link)",
+          "when": "typst-oxide.repositoryExists"
         }
       ]
     },
