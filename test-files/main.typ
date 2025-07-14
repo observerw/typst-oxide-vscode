@@ -15,5 +15,3 @@ And here is a link to just [[other]] file.
 [[other:Section with Label]]
 
 #lorem(1000)
-
-
