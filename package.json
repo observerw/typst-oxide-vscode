@@ -1,13 +1,15 @@
 {
   "name": "typst-oxide",
-  "displayName": "typst-oxide",
-  "description": "",
+  "displayName": "Typst Oxide Wiki Links",
+  "description": "Wiki-style linking for Typst files with [[file]] and [[file:label]] syntax support",
   "version": "0.0.1",
+  "publisher": "typst-oxide",
   "engines": {
     "vscode": "^1.102.0"
   },
   "categories": [
-    "Other"
+    "Other",
+    "Language Packs"
   ],
   "activationEvents": [
     "onLanguage:typst"
@@ -87,5 +89,20 @@
     "typescript": "^5.8.3",
     "@vscode/test-cli": "^0.0.11",
     "@vscode/test-electron": "^2.5.2"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/typst-oxide-vscode.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/typst-oxide-vscode/issues"
+  },
+  "homepage": "https://github.com/your-username/typst-oxide-vscode#readme",
+  "keywords": [
+    "typst",
+    "wiki",
+    "links",
+    "navigation",
+    "documentation"
+  ]
 }
