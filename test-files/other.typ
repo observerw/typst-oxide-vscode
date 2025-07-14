@@ -12,3 +12,5 @@ This is a section with a custom label <custom-section>.
 
 // Important note
 This is an important note <important-note>.
+
+[[main:Main Document]]

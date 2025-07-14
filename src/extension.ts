@@ -5,6 +5,7 @@ import { WikiLinkCompletionProvider } from "./completionProvider";
 import { WikiLinkDiagnosticManager } from "./diagnosticProvider";
 import { WikiLinkHandler, WikiLinkProvider } from "./wikiLinkProvider";
 import { FindReferencesProvider } from "./findReferencesProvider";
+import { LinkSidebarProvider } from "./linkSidebarProvider";
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -41,6 +42,18 @@ export function activate(context: vscode.ExtensionContext) {
     findReferencesProvider
   );
 
+  // Register wiki links sidebar provider
+  const linkSidebarProvider = new LinkSidebarProvider(context);
+  vscode.window.registerTreeDataProvider("typst-oxide.links", linkSidebarProvider);
+
+  // Register refresh links command
+  const refreshLinksDisposable = vscode.commands.registerCommand(
+    "typst-oxide.refreshLinks",
+    () => {
+      linkSidebarProvider.refresh();
+    }
+  );
+
   // Register command handler for custom wiki link navigation
   const wikiLinkCommandDisposable = vscode.commands.registerCommand(
     "typst-oxide.openWikiLink",
@@ -73,7 +86,8 @@ export function activate(context: vscode.ExtensionContext) {
     linkProviderDisposable,
     completionProviderDisposable,
     referencesProviderDisposable,
-    wikiLinkCommandDisposable
+    wikiLinkCommandDisposable,
+    refreshLinksDisposable
   );
 }
 

@@ -26,8 +26,40 @@
       {
         "command": "typst-oxide.helloWorld",
         "title": "Hello World"
+      },
+      {
+        "command": "typst-oxide.refreshLinks",
+        "title": "Refresh Links",
+        "icon": "$(refresh)"
       }
-    ]
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "typst-oxide.links",
+          "name": "Wiki Links",
+          "when": "resourceLangId == typst"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "typst-oxide",
+          "title": "Typst Links",
+          "icon": "$(link)"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "typst-oxide.refreshLinks",
+          "when": "view == typst-oxide.links",
+          "group": "navigation"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "pnpm run package",

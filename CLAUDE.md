@@ -67,7 +67,7 @@ This is a VS Code extension that provides wiki-style linking capabilities for Ty
 
 ### File Structure
 
-```
+```text
 src/
 ├── extension.ts                 # Main extension activation
 ├── wikiLinkProvider.ts          # Document links & navigation
@@ -112,7 +112,7 @@ src/
 
 ### Navigation Logic
 
-1. Parse `[[[file:label]]]` syntax
+1. Parse `[[file:label]]` syntax
 2. Resolve relative paths against current file
 3. Handle file creation if missing
 4. Navigate to labels using multi-strategy search
@@ -139,6 +139,7 @@ High Priority
 - [x] **Find references for Headings** - Show "Find All References" for headings in target file
 - [x] **Link validation diagnostics** - Show warnings/errors for broken links
 - [x] **Better error handling** - User-friendly messages for missing files/labels
+- [ ] **Sidebar for links** - Show all links (forward and backward) in a sidebar view
 
 Medium Priority
 
@@ -162,5 +163,3 @@ Technical Improvements
 - [ ] **Better regex patterns** - Handle edge cases in wiki link syntax
 - [ ] **Unit tests** - Add comprehensive test coverage
 - [ ] **Integration tests** - Test with real Typst projects
-
-- Add a feature: when opening a dir with `.typst-oxide` subdir, show a sidebar when opening a `.typ` file. The sidebar contains section "forward links" (showing all links to other files) and "backward links" (showing all links to current files).
