@@ -1,6 +1,6 @@
 # Typst-Oxide
 
-A VS Code extension that adds powerful wiki-style linking capabilities to Typst files, enabling seamless navigation between documents and quick access to labels within files.
+A VS Code extension that provides wiki-style linking capabilities for Typst files, allowing users to create links between documents using `[[path/to/file]]` or `[[path/to/file:label]]` syntax.
 
 ## Features
 
@@ -29,7 +29,6 @@ Automatically detects and provides completions for:
 
 - **Typst labels**: `<label-name>` syntax
 - **Headings**: `= Title`, `== Subtitle`, etc.
-- **Comments**: `// Important note` or `/* Block comment */`
 
 ### ✅ Link Validation
 
@@ -37,6 +36,12 @@ Automatically detects and provides completions for:
 - Warnings for broken file paths
 - Warnings for missing labels
 - Quick fixes for common issues
+
+### 🔍 Find References
+
+- Find all references to labels and headings across your workspace
+- Right-click on any label or heading → "Find All References"
+- See all files that reference a specific label or heading
 
 ## Usage
 
@@ -110,6 +115,42 @@ In `math/formulas.typ`:
 
 $ e^(i pi) + 1 = 0 $ <euler-formula>
 ```
+
+---
+
+## Development Setup
+
+### Prerequisites
+
+- Node.js 18+ 
+- pnpm package manager
+
+### Setup
+
+1. Clone the repository
+2. Install dependencies: `pnpm install`
+3. Start development mode: `pnpm run watch`
+4. Press F5 in VS Code to open Extension Development Host
+5. Open a .typ file to test wiki link functionality
+
+### Build Commands
+
+- `pnpm run compile` - Build the extension (type check, lint, bundle)
+- `pnpm run watch` - Watch mode for development
+- `pnpm run package` - Production build for publishing
+- `pnpm run test` - Run extension tests
+- `pnpm run lint` - Run ESLint
+- `pnpm run check-types` - TypeScript type checking only
+
+### Architecture Overview
+
+The extension is built with TypeScript and provides:
+
+- **WikiLinkProvider**: Implements `DocumentLinkProvider` for `[[file]]` syntax
+- **WikiLinkCompletionProvider**: Autocompletion for file paths and labels  
+- **WikiLinkDiagnosticManager**: Real-time validation with debounced updates
+- **FindReferencesProvider**: Find all references to labels and headings
+- **LabelSearcher**: Multi-strategy label discovery and navigation
 
 ---
 
