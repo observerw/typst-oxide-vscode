@@ -4,6 +4,7 @@ import * as vscode from "vscode";
 import { WikiLinkCompletionProvider } from "./completionProvider";
 import { WikiLinkDiagnosticManager } from "./diagnosticProvider";
 import { WikiLinkHandler, WikiLinkProvider } from "./wikiLinkProvider";
+import { FindReferencesProvider } from "./findReferencesProvider";
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -32,6 +33,13 @@ export function activate(context: vscode.ExtensionContext) {
   // Register diagnostic provider for wiki link validation
   const diagnosticManager = new WikiLinkDiagnosticManager();
   context.subscriptions.push(diagnosticManager);
+
+  // Register find references provider for labels and headings
+  const findReferencesProvider = new FindReferencesProvider();
+  const referencesProviderDisposable = vscode.languages.registerReferenceProvider(
+    { language: "typst" },
+    findReferencesProvider
+  );
 
   // Register command handler for custom wiki link navigation
   const wikiLinkCommandDisposable = vscode.commands.registerCommand(
@@ -64,6 +72,7 @@ export function activate(context: vscode.ExtensionContext) {
     disposable,
     linkProviderDisposable,
     completionProviderDisposable,
+    referencesProviderDisposable,
     wikiLinkCommandDisposable
   );
 }

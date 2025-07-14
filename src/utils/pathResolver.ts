@@ -27,7 +27,9 @@ export class PathResolver {
    * Ensures the file has a .typ extension if not specified
    */
   static ensureTypstExtension(filePath: string): string {
-    if (!filePath.endsWith(".typ")) {
+    // Check if the file already has an extension
+    const hasExtension = path.extname(filePath) !== '';
+    if (!hasExtension) {
       return filePath + ".typ";
     }
     return filePath;

@@ -12,6 +12,8 @@ And here is a link to just [[other]] file.
 
 [[other:custom-section]]
 
+[[other:Section with Label]]
+
 #lorem(1000)
 
 
