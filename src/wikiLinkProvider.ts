@@ -126,19 +126,14 @@ export class WikiLinkHandler {
       const fileExists = await PathResolver.fileExists(targetUri);
       if (!fileExists) {
         const relativePath = PathResolver.getWorkspaceRelativePath(targetUri);
-        const create = await vscode.window.showErrorMessage(
-          `📄 File not found: "${relativePath}"`,
+        vscode.window.showWarningMessage(
+          `📄 Creating missing file: "${relativePath}"`,
           {
             modal: false,
-            detail: `The linked file "${relativePath}" doesn't exist in your workspace. Would you like to create it?`,
-          },
-          "Create File",
-          "Cancel"
+            detail: `The linked file "${relativePath}" didn't exist and has been created automatically.`,
+          }
         );
-
-        if (create === "Create File") {
-          await this.createNewFile(targetUri, label);
-        }
+        await this.createNewFile(targetUri, label);
         return;
       }
 
@@ -183,36 +178,24 @@ export class WikiLinkHandler {
   }
 
   /**
-   * Creates a new file with basic content and optionally adds a label
+   * Creates a new empty file
    */
   private static async createNewFile(
     uri: vscode.Uri,
     label?: string
   ): Promise<void> {
     try {
-      const fileName =
-        uri.path.split("/").pop()?.replace(".typ", "") || "Untitled";
-      let content = `= ${fileName}\n\n`;
-
-      // If a label was provided, add it as a comment
-      if (label) {
-        content += `// ${label}\n\n`;
-      }
-
-      content += `// Add your content here\n`;
-
-      await vscode.workspace.fs.writeFile(uri, Buffer.from(content, "utf8"));
+      const fileName = uri.path.split("/").pop()?.replace(".typ", "") || "Untitled";
+      
+      await vscode.workspace.fs.writeFile(uri, Buffer.from("", "utf8"));
 
       const document = await vscode.workspace.openTextDocument(uri);
       await vscode.window.showTextDocument(document);
 
       vscode.window.showInformationMessage(
-        `✅ Created new file: "${fileName}.typ"`,
+        `✅ Created new empty file: "${fileName}.typ"`,
         {
           modal: false,
-          detail: label
-            ? `Added label "${label}" as a comment in the new file.`
-            : undefined,
         }
       );
     } catch (error) {

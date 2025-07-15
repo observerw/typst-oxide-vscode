@@ -56,8 +56,8 @@ export class WikiLinkDiagnosticProvider {
     if (!fileExists) {
       return new vscode.Diagnostic(
         link.range,
-        `File not found: ${PathResolver.getWorkspaceRelativePath(targetUri)}`,
-        vscode.DiagnosticSeverity.Error
+        `File not found: ${PathResolver.getWorkspaceRelativePath(targetUri)} - will be created on navigation`,
+        vscode.DiagnosticSeverity.Warning
       );
     }
 

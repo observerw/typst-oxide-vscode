@@ -139,6 +139,7 @@ High Priority
 - [x] **Find references for Headings** - Show "Find All References" for headings in target file
 - [x] **Link validation diagnostics** - Show warnings/errors for broken links
 - [x] **Better error handling** - User-friendly messages for missing files/labels
+- [x] **Create missing files** - Prompt to create file if wiki link target does not exist (only for `.typ`)
 - [x] **Sidebar for links** - Show all links (forward and backward) in a sidebar view
 - [ ] **Settings management** - Add configurable settings with schema validation and TOML export
 
