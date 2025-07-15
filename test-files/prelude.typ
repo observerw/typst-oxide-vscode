@@ -1,11 +1,13 @@
 #let meta(..args) = metadata(args)
 
 #let wikilink-regex = regex("\[\[([^|\]]+?)(?::([^|\]]+?))?(?:\|([^\]]+))?\]\]")
+#set page(height: auto, margin: 2em)
 
 #let note(body) = {
   set text(font: ("Source Han Sans SC", "Times New Roman"), size: 14pt, region: "cn")
   set par(justify: true)
-  set page(height: auto, margin: 2em)
+  set math.equation(numbering: "(1)")
+
   show wikilink-regex: it => {
     let parsed = it.text.match(wikilink-regex)
     let captures = parsed.captures

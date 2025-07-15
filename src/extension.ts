@@ -3,16 +3,15 @@
 import * as vscode from "vscode";
 import { WikiLinkCompletionProvider } from "./completionProvider";
 import { WikiLinkDiagnosticManager } from "./diagnosticProvider";
-import { WikiLinkHandler, WikiLinkProvider } from "./wikiLinkProvider";
 import { FindReferencesProvider } from "./findReferencesProvider";
 import { LinkSidebarProvider } from "./linkSidebarProvider";
+import { TemplateProvider } from "./templateProvider";
+import { WikiLinkHandler, WikiLinkProvider } from "./wikiLinkProvider";
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-  // Use the console to output diagnostic information (console.log) and errors (console.error)
-  // This line of code will only be executed once when your extension is activated
-  console.log('Congratulations, your extension "typst-oxide" is now active!');
+  // Register template provider
+  const templateProvider = new TemplateProvider(context);
+  templateProvider.register();
 
   // Register wiki link provider for .typ files
   const wikiLinkProvider = new WikiLinkProvider();
@@ -37,18 +36,22 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Register find references provider for labels and headings
   const findReferencesProvider = new FindReferencesProvider();
-  const referencesProviderDisposable = vscode.languages.registerReferenceProvider(
-    { language: "typst" },
-    findReferencesProvider
-  );
+  const referencesProviderDisposable =
+    vscode.languages.registerReferenceProvider(
+      { language: "typst" },
+      findReferencesProvider
+    );
 
   // Register context key for repository detection
   const repositoryContext = new RepositoryContext();
-  
+
   // Register wiki links sidebar provider
   const linkSidebarProvider = new LinkSidebarProvider(context);
-  vscode.window.registerTreeDataProvider("typst-oxide.links", linkSidebarProvider);
-  
+  vscode.window.registerTreeDataProvider(
+    "typst-oxide.links",
+    linkSidebarProvider
+  );
+
   // Set initial repository context
   repositoryContext.updateRepositoryContext();
 
@@ -98,20 +101,41 @@ export function activate(context: vscode.ExtensionContext) {
           return;
         }
 
-        const typstOxideDir = vscode.Uri.joinPath(workspaceFolder.uri, ".typst-oxide");
-        
+        const typstOxideDir = vscode.Uri.joinPath(
+          workspaceFolder.uri,
+          ".typst-oxide"
+        );
+
         try {
           await vscode.workspace.fs.createDirectory(typstOxideDir);
-          vscode.window.showInformationMessage("Initialized typst-oxide repository");
+          vscode.window.showInformationMessage(
+            "Initialized typst-oxide repository"
+          );
         } catch (error: any) {
           if (error.code === "FileExists") {
-            vscode.window.showInformationMessage("Typst-oxide repository already initialized");
+            vscode.window.showInformationMessage(
+              "Typst-oxide repository already initialized"
+            );
           } else {
             throw error;
           }
         }
       } catch (error) {
-        vscode.window.showErrorMessage(`Failed to initialize repository: ${error}`);
+        vscode.window.showErrorMessage(
+          `Failed to initialize repository: ${error}`
+        );
+      }
+    }
+  );
+
+  // Register tinymist.pinMain command to be invoked when active editor changes
+  const activeEditorListener = vscode.window.onDidChangeActiveTextEditor(
+    (editor) => {
+      if (editor && editor.document.languageId === "typst") {
+        vscode.commands.executeCommand(
+          "tinymist.pinMain",
+          editor.document.uri.fsPath
+        );
       }
     }
   );
@@ -123,7 +147,8 @@ export function activate(context: vscode.ExtensionContext) {
     referencesProviderDisposable,
     wikiLinkCommandDisposable,
     refreshLinksDisposable,
-    initRepositoryDisposable
+    initRepositoryDisposable,
+    activeEditorListener
   );
 }
 
@@ -136,9 +161,11 @@ class RepositoryContext {
     const watcher = vscode.workspace.createFileSystemWatcher("**/.typst-oxide");
     watcher.onDidCreate(() => this.updateRepositoryContext());
     watcher.onDidDelete(() => this.updateRepositoryContext());
-    
+
     // Also listen for workspace folder changes
-    vscode.workspace.onDidChangeWorkspaceFolders(() => this.updateRepositoryContext());
+    vscode.workspace.onDidChangeWorkspaceFolders(() =>
+      this.updateRepositoryContext()
+    );
   }
 
   async updateRepositoryContext(): Promise<void> {
@@ -149,7 +176,10 @@ class RepositoryContext {
     }
 
     try {
-      const typstOxideDir = vscode.Uri.joinPath(workspaceFolder.uri, ".typst-oxide");
+      const typstOxideDir = vscode.Uri.joinPath(
+        workspaceFolder.uri,
+        ".typst-oxide"
+      );
       await vscode.workspace.fs.stat(typstOxideDir);
       await this.setContext(true);
     } catch {
