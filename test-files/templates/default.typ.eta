@@ -1,0 +1,8 @@
+#import "prelude.typ": *
+#show: note
+#meta(
+    title: <% it.path %>,
+    create-date: <% it.date %>
+)
+
+= <%= it.path %>
