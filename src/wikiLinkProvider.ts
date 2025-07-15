@@ -5,12 +5,13 @@ import { PathResolver } from "./utils/pathResolver";
 export interface WikiLink {
   filePath: string;
   label: string;
+  alias: string;
   range: vscode.Range;
 }
 
 export class WikiLinkProvider implements vscode.DocumentLinkProvider {
-  // Regex to match wiki links: [[path/to/file]] or [[path/to/file:<label>]]
-  private static readonly WIKI_LINK_REGEX = /\[\[([^\]]+?)(?::([^\]]+))?\]\]/g;
+  // Regex to match wiki links: [[path/to/file]] or [[path/to/file:<label>]] or [[path/to/file:<label>|<alias>]]
+  private static readonly WIKI_LINK_REGEX = /\[\[([^|\]]+?)(?::([^|\]]+?))?(?:\|([^\]]+))?\]\]/g;
 
   /**
    * Provides document links for wiki links in .typ files
@@ -32,6 +33,7 @@ export class WikiLinkProvider implements vscode.DocumentLinkProvider {
 
       const filePath = match[1].trim();
       const label = match[2] ? match[2].trim() : undefined;
+      const alias = match[3] ? match[3].trim() : undefined;
 
       // Create range for the entire wiki link
       const startPos = document.positionAt(match.index);
@@ -62,6 +64,11 @@ export class WikiLinkProvider implements vscode.DocumentLinkProvider {
             targetUri
           )}`
         : `Navigate to ${PathResolver.getWorkspaceRelativePath(targetUri)}`;
+      
+      // Update the link text to show alias if provided
+      if (alias) {
+        link.tooltip = `Navigate to "${label || PathResolver.getWorkspaceRelativePath(targetUri)}" (shown as "${alias}")`;
+      }
 
       links.push(link);
     }
@@ -90,6 +97,7 @@ export class WikiLinkProvider implements vscode.DocumentLinkProvider {
       links.push({
         filePath,
         label,
+        alias: match[3] ? match[3].trim() : "",
         range,
       });
     }

@@ -8,7 +8,7 @@ Here we link to [[other:euler-formula]].
 
 And here is a link to just [[other]] file.
 
-[[other:euler-formula]]
+[[other:euler-formula|some math]]
 
 [[other:custom-section]]
 

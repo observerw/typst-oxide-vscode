@@ -16,7 +16,7 @@ export class WikiLinkCompletionProvider
       .text.substring(0, position.character);
 
     // Check if we're in a wiki link context
-    const wikiLinkMatch = linePrefix.match(/\[\[([^:]*?)(?::([^\]]*?))?$/);
+    const wikiLinkMatch = linePrefix.match(/\[\[([^:]*?)(?::([^|\]]*?))?(?:\|[^\]]*)?$/);
     if (!wikiLinkMatch) {
       return [];
     }
