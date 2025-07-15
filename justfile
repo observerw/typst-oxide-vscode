@@ -73,13 +73,3 @@ clean:
 # Package the extension (requires vsce)
 package:
     npx vsce package
-
-# Show current version
-version:
-    @grep '"version"' package.json | sed 's/.*"version": "\([^"]*\)".*/\1/'
-
-# Validate that the extension can be packaged
-validate:
-    npx vsce package --out /tmp/typst-oxide-test.vsix
-    rm -f /tmp/typst-oxide-test.vsix
-    echo "✅ Extension validation passed"
