@@ -4,11 +4,11 @@
 
 = Main Document
 
-Here we link to [[other:euler-formula]].
+Here we link to [[other:euler]].
 
 And here is a link to just [[other]] file.
 
-Here's [[other:euler-formula|some math]].
+Here's [[other:euler|some math]].
 
 == Subtitle
 

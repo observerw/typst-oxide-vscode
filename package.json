@@ -39,6 +39,10 @@
       {
         "command": "typst-oxide.initRepository",
         "title": "Initialize Typst-Oxide Repository"
+      },
+      {
+        "command": "typst-oxide.updateLinksForRename",
+        "title": "Update Wiki Links for Renamed File"
       }
     ],
     "views": {

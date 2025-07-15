@@ -141,7 +141,7 @@ High Priority
 - [x] **Better error handling** - User-friendly messages for missing files/labels
 - [x] **Create missing files** - Prompt to create file if wiki link target does not exist (only for `.typ`)
 - [x] **Sidebar for links** - Show all links (forward and backward) in a sidebar view
-- [ ] **Template support** - Allow users to create templates for new files with predefined content
+- [x] **Template support** - Allow users to create templates for new files with predefined content
 - [ ] **Settings management** - Add configurable settings with schema validation and TOML export
 
 Medium Priority

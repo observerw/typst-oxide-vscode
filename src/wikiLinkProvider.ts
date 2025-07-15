@@ -9,9 +9,12 @@ export interface WikiLink {
   range: vscode.Range;
 }
 
+// Regex to match wiki links: [[path/to/file]] or [[path/to/file:<label>]] or [[path/to/file:<label>|<alias>]]
+export const WIKI_LINK_REGEX = /\[\[([^|\]]+?)(?::([^|\]]+?))?(?:\|([^\]]+))?\]\]/g;
+
 export class WikiLinkProvider implements vscode.DocumentLinkProvider {
-  // Regex to match wiki links: [[path/to/file]] or [[path/to/file:<label>]] or [[path/to/file:<label>|<alias>]]
-  private static readonly WIKI_LINK_REGEX = /\[\[([^|\]]+?)(?::([^|\]]+?))?(?:\|([^\]]+))?\]\]/g;
+  // Use the exported regex internally
+  private static readonly WIKI_LINK_REGEX = WIKI_LINK_REGEX;
 
   /**
    * Provides document links for wiki links in .typ files

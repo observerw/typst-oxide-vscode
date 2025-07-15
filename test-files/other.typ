@@ -4,7 +4,7 @@ Here is the euler formula:
 
 $
   e^(i pi) + 1 = 0
-$ <euler-formula>
+$ <euler>
 
 == Section with Label
 

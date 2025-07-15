@@ -7,6 +7,9 @@ import { FindReferencesProvider } from "./findReferencesProvider";
 import { LinkSidebarProvider } from "./linkSidebarProvider";
 import { TemplateProvider } from "./templateProvider";
 import { WikiLinkHandler, WikiLinkProvider } from "./wikiLinkProvider";
+import { FileRenameManager } from "./fileRenameManager";
+import { LabelSymbolProvider } from "./labelSymbolProvider";
+import { LabelRenameProvider } from "./labelRenameProvider";
 
 export function activate(context: vscode.ExtensionContext) {
   // Register template provider
@@ -128,6 +131,76 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  // Register manual link update command
+  const updateLinksDisposable = vscode.commands.registerCommand(
+    "typst-oxide.updateLinksForRename",
+    async () => {
+      try {
+        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+        if (!workspaceFolder) {
+          vscode.window.showErrorMessage("No workspace folder is open");
+          return;
+        }
+
+        // Get the old file path
+        const oldUri = await vscode.window.showOpenDialog({
+          canSelectFiles: true,
+          canSelectFolders: false,
+          canSelectMany: false,
+          filters: {
+            'Typst files': ['typ']
+          },
+          title: "Select the original file (before rename)"
+        });
+
+        if (!oldUri || oldUri.length === 0) {
+          return;
+        }
+
+        // Get the new file path
+        const newUri = await vscode.window.showOpenDialog({
+          canSelectFiles: true,
+          canSelectFolders: false,
+          canSelectMany: false,
+          filters: {
+            'Typst files': ['typ']
+          },
+          title: "Select the renamed file"
+        });
+
+        if (!newUri || newUri.length === 0) {
+          return;
+        }
+
+        // Trigger manual update
+        await fileRenameManager.triggerManualUpdate(oldUri[0], newUri[0]);
+
+      } catch (error) {
+        vscode.window.showErrorMessage(
+          `Failed to update wiki links: ${error}`
+        );
+      }
+    }
+  );
+
+  // Register label symbol provider for labels and headings
+  const labelSymbolProvider = new LabelSymbolProvider();
+  const labelSymbolDisposable = vscode.languages.registerDocumentSymbolProvider(
+    { language: "typst" },
+    labelSymbolProvider
+  );
+
+  // Register label rename provider
+  const labelRenameProvider = new LabelRenameProvider();
+  const labelRenameDisposable = vscode.languages.registerRenameProvider(
+    { language: "typst" },
+    labelRenameProvider
+  );
+
+  // Register file rename manager for automatic wiki link updates
+  const fileRenameManager = new FileRenameManager(context);
+  fileRenameManager.activate();
+
   // Register tinymist.pinMain command to be invoked when active editor changes
   const activeEditorListener = vscode.window.onDidChangeActiveTextEditor(
     (editor) => {
@@ -148,6 +221,10 @@ export function activate(context: vscode.ExtensionContext) {
     wikiLinkCommandDisposable,
     refreshLinksDisposable,
     initRepositoryDisposable,
+    updateLinksDisposable,
+    fileRenameManager,
+    labelSymbolDisposable,
+    labelRenameDisposable,
     activeEditorListener
   );
 }
