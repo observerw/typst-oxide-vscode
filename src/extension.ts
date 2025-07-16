@@ -10,8 +10,17 @@ import { WikiLinkHandler, WikiLinkProvider } from "./wikiLinkProvider";
 import { FileRenameManager } from "./fileRenameManager";
 import { LabelSymbolProvider } from "./labelSymbolProvider";
 import { LabelRenameProvider } from "./labelRenameProvider";
+import { SettingsManager } from "./settings";
 
 export function activate(context: vscode.ExtensionContext) {
+  // Initialize settings manager
+  const settingsManager = SettingsManager.getInstance();
+  
+  // Load settings
+  settingsManager.loadSettings().catch(error => {
+    console.error('Failed to load settings:', error);
+  });
+
   // Register template provider
   const templateProvider = new TemplateProvider(context);
   templateProvider.register();
@@ -201,6 +210,30 @@ export function activate(context: vscode.ExtensionContext) {
   const fileRenameManager = new FileRenameManager(context);
   fileRenameManager.activate();
 
+  // Register settings management commands
+  const openSettingsDisposable = vscode.commands.registerCommand(
+    "typst-oxide.openSettings",
+    async () => {
+      try {
+        await settingsManager.openSettingsFile();
+      } catch (error) {
+        vscode.window.showErrorMessage(`Failed to open settings: ${error}`);
+      }
+    }
+  );
+
+  const reloadSettingsDisposable = vscode.commands.registerCommand(
+    "typst-oxide.reloadSettings",
+    async () => {
+      try {
+        await settingsManager.reloadSettings();
+        vscode.window.showInformationMessage("Settings reloaded");
+      } catch (error) {
+        vscode.window.showErrorMessage(`Failed to reload settings: ${error}`);
+      }
+    }
+  );
+
   // Register tinymist.pinMain command to be invoked when active editor changes
   const activeEditorListener = vscode.window.onDidChangeActiveTextEditor(
     (editor) => {
@@ -225,7 +258,10 @@ export function activate(context: vscode.ExtensionContext) {
     fileRenameManager,
     labelSymbolDisposable,
     labelRenameDisposable,
-    activeEditorListener
+    activeEditorListener,
+    openSettingsDisposable,
+    reloadSettingsDisposable,
+    settingsManager
   );
 }
 

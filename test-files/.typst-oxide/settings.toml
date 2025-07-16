@@ -1,0 +1,38 @@
+# Typst Oxide Settings
+# This file configures the Typst Oxide extension behavior.
+# Changes are applied automatically when the file is saved.
+
+[wiki-links]
+enabled = true
+file-extensions = [".typ", ".typst"]
+max-depth = 3
+ignore-patterns = ["node_modules/**", ".git/**", "target/**"]
+case-sensitive = false
+allow-absolute-paths = true
+create-missing-files = true
+
+[labels]
+enabled = true
+detect-headings = true
+detect-typst-labels = true
+heading-levels = [1, 2, 3]
+allow-duplicate-labels = false
+
+[diagnostics]
+enabled = true
+update-delay = 300
+show-missing-file-warnings = true
+show-missing-label-warnings = true
+severity = "warning"
+
+[completion]
+enabled = true
+max-suggestions = 15
+show-file-icons = true
+include-file-content-preview = false
+
+[find-references]
+enabled = true
+include-headings = true
+include-labels = true
+max-results = 50
