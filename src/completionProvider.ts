@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as vscode from "vscode";
 import { PathResolver } from "./utils/pathResolver";
+import { DatabaseService } from "./indexing/dbService";
 
 export class WikiLinkCompletionProvider
   implements vscode.CompletionItemProvider
@@ -37,8 +38,8 @@ export class WikiLinkCompletionProvider
     return this.provideFilePathCompletions(document, filePath, token);
   }
 
-  /**
-   * Provides completion items for file paths
+/**
+   * Provides completion items for file paths including aliases
    */
   private async provideFilePathCompletions(
     document: vscode.TextDocument,
@@ -48,28 +49,27 @@ export class WikiLinkCompletionProvider
     const completions: vscode.CompletionItem[] = [];
 
     try {
-      // Get the current document's directory
       const currentDir = path.dirname(document.uri.fsPath);
+      const dbService = DatabaseService.getInstance();
 
-      // Determine the search directory based on partial path
+      // 1. Get file matches from filesystem
       let searchDir: string;
       let searchPattern: string;
 
       if (partialPath.includes("/") || partialPath.includes("\\")) {
-        // If partial path contains directory separators
         const pathParts = partialPath.split(/[/\\]/);
         searchPattern = pathParts.pop() || "";
         const dirPath = pathParts.join(path.sep);
         searchDir = path.resolve(currentDir, dirPath);
       } else {
-        // Search in current directory
         searchDir = currentDir;
         searchPattern = partialPath;
       }
 
-      // Find all .typ files in the search directory
-      const files = await this.findTypstFiles(searchDir, searchPattern);
+      const fileMatches = new Set<string>();
 
+      // Add files from filesystem search
+      const files = await this.findTypstFiles(searchDir, searchPattern);
       for (const file of files) {
         if (token.isCancellationRequested) {
           break;
@@ -88,7 +88,43 @@ export class WikiLinkCompletionProvider
           `Link to \`${pathWithoutExt}\``
         );
         completion.insertText = pathWithoutExt;
-        completion.sortText = pathWithoutExt;
+        completion.sortText = `0_${pathWithoutExt}`; // Prioritize direct filename matches
+
+        completions.push(completion);
+        fileMatches.add(pathWithoutExt.toLowerCase());
+      }
+
+      // 2. Get alias matches from database
+      const aliasMatches = await dbService.searchFilesByAlias(searchPattern);
+      
+      for (const file of aliasMatches) {
+        if (token.isCancellationRequested) {
+          break;
+        }
+
+        const relativePath = path.relative(currentDir, file.filePath);
+        const pathWithoutExt = relativePath.replace(/\.typ$/, "");
+
+        // Skip if already added as direct file match
+        if (fileMatches.has(pathWithoutExt.toLowerCase())) {
+          continue;
+        }
+
+        const matchingAliases = file.aliases.filter(alias => 
+          alias.toLowerCase().includes(searchPattern.toLowerCase())
+        );
+
+        const completion = new vscode.CompletionItem(
+          pathWithoutExt,
+          vscode.CompletionItemKind.File
+        );
+
+        completion.detail = `Alias: ${matchingAliases.join(", ")}`;
+        completion.documentation = new vscode.MarkdownString(
+          `Link to \`${pathWithoutExt}\` via alias${matchingAliases.length > 1 ? "es" : ""}: \`${matchingAliases.join(", ")}\``
+        );
+        completion.insertText = pathWithoutExt;
+        completion.sortText = `1_${pathWithoutExt}`; // Sort aliases after direct matches
 
         completions.push(completion);
       }

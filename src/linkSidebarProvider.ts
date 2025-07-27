@@ -1,11 +1,16 @@
-import * as vscode from "vscode";
 import * as path from "path";
-import { LinkDiscovery, FileLinks, LinkInfo } from "./services/linkDiscovery.js";
-import { PathResolver } from "./utils/pathResolver.js";
+import * as vscode from "vscode";
+import { LinkDiscovery, LinkInfo } from "./services/linkDiscovery.js";
 
-export class LinkSidebarProvider implements vscode.TreeDataProvider<LinkTreeItem> {
-  private _onDidChangeTreeData: vscode.EventEmitter<LinkTreeItem | undefined | null | void> = new vscode.EventEmitter<LinkTreeItem | undefined | null | void>();
-  readonly onDidChangeTreeData: vscode.Event<LinkTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
+export class LinkSidebarProvider
+  implements vscode.TreeDataProvider<LinkTreeItem>
+{
+  private _onDidChangeTreeData: vscode.EventEmitter<
+    LinkTreeItem | undefined | null | void
+  > = new vscode.EventEmitter<LinkTreeItem | undefined | null | void>();
+  readonly onDidChangeTreeData: vscode.Event<
+    LinkTreeItem | undefined | null | void
+  > = this._onDidChangeTreeData.event;
 
   private linkDiscovery: LinkDiscovery;
   private currentFile: string | undefined;
@@ -66,13 +71,13 @@ export class LinkSidebarProvider implements vscode.TreeDataProvider<LinkTreeItem
       return this.getRootItems();
     }
 
-    if (element.contextValue === "category" && (element.linkInfo as any).links) {
-      return (element.linkInfo as any).links.map((link: LinkInfo) => 
-        new LinkTreeItem(
-          link,
-          vscode.TreeItemCollapsibleState.None,
-          "link"
-        )
+    if (
+      element.contextValue === "category" &&
+      (element.linkInfo as any).links
+    ) {
+      return (element.linkInfo as any).links.map(
+        (link: LinkInfo) =>
+          new LinkTreeItem(link, vscode.TreeItemCollapsibleState.None, "link")
       );
     }
 
@@ -85,47 +90,57 @@ export class LinkSidebarProvider implements vscode.TreeDataProvider<LinkTreeItem
   private async getRootItems(): Promise<LinkTreeItem[]> {
     const activeEditor = vscode.window.activeTextEditor;
     if (!activeEditor || activeEditor.document.languageId !== "typst") {
-      return [new LinkTreeItem(
-        { label: "Open a .typ file to see links" } as any,
-        vscode.TreeItemCollapsibleState.None,
-        "message"
-      )];
+      return [
+        new LinkTreeItem(
+          { label: "Open a .typ file to see links" } as any,
+          vscode.TreeItemCollapsibleState.None,
+          "message"
+        ),
+      ];
     }
 
     try {
-      const fileLinks = await this.linkDiscovery.getFileLinks(activeEditor.document.uri);
-      
+      const fileLinks = await this.linkDiscovery.getFileLinks(
+        activeEditor.document.uri
+      );
+
       const items: LinkTreeItem[] = [];
 
       // Forward links section
-      items.push(new LinkTreeItem(
-        { 
-          label: `Forward Links (${fileLinks.forwardLinks.length})`,
-          links: fileLinks.forwardLinks
-        } as any,
-        vscode.TreeItemCollapsibleState.Expanded,
-        "category",
-        "arrow-right"
-      ));
+      items.push(
+        new LinkTreeItem(
+          {
+            label: `Forward Links (${fileLinks.forwardLinks.length})`,
+            links: fileLinks.forwardLinks,
+          } as any,
+          vscode.TreeItemCollapsibleState.Expanded,
+          "category",
+          "arrow-right"
+        )
+      );
 
       // Backward links section
-      items.push(new LinkTreeItem(
-        { 
-          label: `Backward Links (${fileLinks.backwardLinks.length})`,
-          links: fileLinks.backwardLinks
-        } as any,
-        vscode.TreeItemCollapsibleState.Expanded,
-        "category",
-        "arrow-left"
-      ));
+      items.push(
+        new LinkTreeItem(
+          {
+            label: `Backward Links (${fileLinks.backwardLinks.length})`,
+            links: fileLinks.backwardLinks,
+          } as any,
+          vscode.TreeItemCollapsibleState.Expanded,
+          "category",
+          "arrow-left"
+        )
+      );
 
       return items;
     } catch (error) {
-      return [new LinkTreeItem(
-        { label: "Error loading links" } as any,
-        vscode.TreeItemCollapsibleState.None,
-        "message"
-      )];
+      return [
+        new LinkTreeItem(
+          { label: "Error loading links" } as any,
+          vscode.TreeItemCollapsibleState.None,
+          "message"
+        ),
+      ];
     }
   }
 }
@@ -141,8 +156,8 @@ export class LinkTreeItem extends vscode.TreeItem {
     public readonly iconName?: string
   ) {
     super(
-      typeof linkInfo === "object" 
-        ? (linkInfo as LinkInfo).targetFile 
+      typeof linkInfo === "object"
+        ? (linkInfo as LinkInfo).targetFile
           ? path.basename((linkInfo as LinkInfo).targetFile)
           : (linkInfo as any).label
         : String(linkInfo),
@@ -154,20 +169,28 @@ export class LinkTreeItem extends vscode.TreeItem {
       this.iconPath = new vscode.ThemeIcon(iconName || "folder");
     } else if (contextValue === "link") {
       const link = linkInfo as LinkInfo;
-      const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(link.targetFile));
-      const relativePath = workspaceFolder 
+      const workspaceFolder = vscode.workspace.getWorkspaceFolder(
+        vscode.Uri.file(link.targetFile)
+      );
+      const relativePath = workspaceFolder
         ? path.relative(workspaceFolder.uri.fsPath, link.targetFile)
         : path.basename(link.targetFile);
 
       this.label = relativePath;
       this.description = link.label ? `#${link.label}` : "";
-      
+
       // Set icon based on link status
       if (!link.exists) {
-        this.iconPath = new vscode.ThemeIcon("error", new vscode.ThemeColor("errorForeground"));
+        this.iconPath = new vscode.ThemeIcon(
+          "error",
+          new vscode.ThemeColor("errorForeground")
+        );
         this.tooltip = `File not found: ${relativePath}`;
       } else if (link.label && !link.labelExists) {
-        this.iconPath = new vscode.ThemeIcon("warning", new vscode.ThemeColor("warningForeground"));
+        this.iconPath = new vscode.ThemeIcon(
+          "warning",
+          new vscode.ThemeColor("warningForeground")
+        );
         this.tooltip = `Label "${link.label}" not found in ${relativePath}`;
       } else if (link.label && link.labelExists) {
         this.iconPath = new vscode.ThemeIcon("link");
@@ -181,10 +204,12 @@ export class LinkTreeItem extends vscode.TreeItem {
       this.command = {
         command: "typst-oxide.openWikiLink",
         title: "Open Link",
-        arguments: [{
-          uri: vscode.Uri.file(link.targetFile).toString(),
-          label: link.label || ""
-        }]
+        arguments: [
+          {
+            uri: vscode.Uri.file(link.targetFile).toString(),
+            label: link.label || "",
+          },
+        ],
       };
     } else if (contextValue === "message") {
       this.label = (linkInfo as any).label;

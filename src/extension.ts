@@ -11,10 +11,17 @@ import { FileRenameManager } from "./fileRenameManager";
 import { LabelSymbolProvider } from "./labelSymbolProvider";
 import { LabelRenameProvider } from "./labelRenameProvider";
 import { SettingsManager } from "./settings";
+import { LinkDiscovery } from "./services/linkDiscovery";
 
 export function activate(context: vscode.ExtensionContext) {
   // Initialize settings manager
   const settingsManager = SettingsManager.getInstance();
+  
+  // Initialize link discovery with indexing
+  const linkDiscovery = LinkDiscovery.getInstance();
+  linkDiscovery.initialize().catch(error => {
+    console.error('Failed to initialize link discovery:', error);
+  });
   
   // Load settings
   settingsManager.loadSettings().catch(error => {
@@ -70,7 +77,8 @@ export function activate(context: vscode.ExtensionContext) {
   // Register refresh links command
   const refreshLinksDisposable = vscode.commands.registerCommand(
     "typst-oxide.refreshLinks",
-    () => {
+    async () => {
+      await linkDiscovery.refreshAll();
       linkSidebarProvider.refresh();
     }
   );
@@ -313,4 +321,7 @@ class RepositoryContext {
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() {}
+export async function deactivate() {
+  const linkDiscovery = LinkDiscovery.getInstance();
+  await linkDiscovery.dispose();
+}

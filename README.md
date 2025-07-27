@@ -1,5 +1,7 @@
 # Typst-Oxide
 
+> PKM for typst
+
 A comprehensive VS Code extension for Typst that brings wiki-style bidirectional linking, smart autocompletion, and powerful navigation features to your Typst documents.
 
 ## Features
