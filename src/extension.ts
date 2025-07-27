@@ -3,29 +3,34 @@
 import * as vscode from "vscode";
 import { WikiLinkCompletionProvider } from "./completionProvider";
 import { WikiLinkDiagnosticManager } from "./diagnosticProvider";
+import { FileRenameManager } from "./fileRenameManager";
 import { FindReferencesProvider } from "./findReferencesProvider";
+import { LabelRenameProvider } from "./labelRenameProvider";
+import { LabelSymbolProvider } from "./labelSymbolProvider";
 import { LinkSidebarProvider } from "./linkSidebarProvider";
+import { IndexingService } from "./services/indexingService";
+import { LinkDiscovery } from "./services/linkDiscovery";
+import { FileWatcherService } from "./services/fileWatcherService";
+import { SettingsManager } from "./settings";
 import { TemplateProvider } from "./templateProvider";
 import { WikiLinkHandler, WikiLinkProvider } from "./wikiLinkProvider";
-import { FileRenameManager } from "./fileRenameManager";
-import { LabelSymbolProvider } from "./labelSymbolProvider";
-import { LabelRenameProvider } from "./labelRenameProvider";
-import { SettingsManager } from "./settings";
-import { LinkDiscovery } from "./services/linkDiscovery";
 
 export function activate(context: vscode.ExtensionContext) {
   // Initialize settings manager
   const settingsManager = SettingsManager.getInstance();
-  
-  // Initialize link discovery with indexing
-  const linkDiscovery = LinkDiscovery.getInstance();
-  linkDiscovery.initialize().catch(error => {
-    console.error('Failed to initialize link discovery:', error);
+
+  // Initialize indexing service first
+  const indexingService = IndexingService.getInstance();
+  indexingService.initialize().catch((error) => {
+    console.error("Failed to initialize indexing service:", error);
   });
-  
+
+  // Initialize link discovery
+  const linkDiscovery = LinkDiscovery.getInstance();
+
   // Load settings
-  settingsManager.loadSettings().catch(error => {
-    console.error('Failed to load settings:', error);
+  settingsManager.loadSettings().catch((error) => {
+    console.error("Failed to load settings:", error);
   });
 
   // Register template provider
@@ -78,7 +83,8 @@ export function activate(context: vscode.ExtensionContext) {
   const refreshLinksDisposable = vscode.commands.registerCommand(
     "typst-oxide.refreshLinks",
     async () => {
-      await linkDiscovery.refreshAll();
+      await indexingService.refreshAll();
+      linkDiscovery.refreshAll();
       linkSidebarProvider.refresh();
     }
   );
@@ -165,9 +171,9 @@ export function activate(context: vscode.ExtensionContext) {
           canSelectFolders: false,
           canSelectMany: false,
           filters: {
-            'Typst files': ['typ']
+            "Typst files": ["typ"],
           },
-          title: "Select the original file (before rename)"
+          title: "Select the original file (before rename)",
         });
 
         if (!oldUri || oldUri.length === 0) {
@@ -180,9 +186,9 @@ export function activate(context: vscode.ExtensionContext) {
           canSelectFolders: false,
           canSelectMany: false,
           filters: {
-            'Typst files': ['typ']
+            "Typst files": ["typ"],
           },
-          title: "Select the renamed file"
+          title: "Select the renamed file",
         });
 
         if (!newUri || newUri.length === 0) {
@@ -191,11 +197,8 @@ export function activate(context: vscode.ExtensionContext) {
 
         // Trigger manual update
         await fileRenameManager.triggerManualUpdate(oldUri[0], newUri[0]);
-
       } catch (error) {
-        vscode.window.showErrorMessage(
-          `Failed to update wiki links: ${error}`
-        );
+        vscode.window.showErrorMessage(`Failed to update wiki links: ${error}`);
       }
     }
   );
@@ -278,10 +281,13 @@ class RepositoryContext {
   private _repositoryExists = false;
 
   constructor() {
-    // Listen for file system changes to detect repository initialization
-    const watcher = vscode.workspace.createFileSystemWatcher("**/.typst-oxide");
-    watcher.onDidCreate(() => this.updateRepositoryContext());
-    watcher.onDidDelete(() => this.updateRepositoryContext());
+    const fileWatcherService = FileWatcherService.getInstance();
+    
+    // Listen for repository directory changes
+    fileWatcherService.registerRepositoryCallback('repository-context', {
+      onDidCreate: () => this.updateRepositoryContext(),
+      onDidDelete: () => this.updateRepositoryContext(),
+    });
 
     // Also listen for workspace folder changes
     vscode.workspace.onDidChangeWorkspaceFolders(() =>
@@ -322,6 +328,13 @@ class RepositoryContext {
 
 // This method is called when your extension is deactivated
 export async function deactivate() {
+  const fileWatcherService = FileWatcherService.getInstance();
   const linkDiscovery = LinkDiscovery.getInstance();
-  await linkDiscovery.dispose();
+  const indexingService = IndexingService.getInstance();
+  const settingsManager = SettingsManager.getInstance();
+  
+  linkDiscovery.dispose();
+  settingsManager.dispose();
+  await indexingService.dispose();
+  fileWatcherService.dispose();
 }

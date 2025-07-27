@@ -2,6 +2,9 @@ import { z } from 'zod';
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import { FileWatcherService } from './services/fileWatcherService';
+
+const SETTINGS_SERVICE_ID = 'settings-manager';
 
 export const SettingsSchema = z.object({
   'wiki-links': z.object({
@@ -61,12 +64,14 @@ export type Settings = z.infer<typeof SettingsSchema>;
 export class SettingsManager {
   private static instance: SettingsManager;
   private settings: Settings | null = null;
-  private settingsWatcher: vscode.FileSystemWatcher | null = null;
+  private fileWatcherService: FileWatcherService;
   private onSettingsChangedEmitter = new vscode.EventEmitter<Settings>();
 
   public readonly onSettingsChanged = this.onSettingsChangedEmitter.event;
 
-  private constructor() {}
+  private constructor() {
+    this.fileWatcherService = FileWatcherService.getInstance();
+  }
 
   public static getInstance(): SettingsManager {
     if (!SettingsManager.instance) {
@@ -167,41 +172,36 @@ export class SettingsManager {
   }
 
   private setupWatcher(settingsPath: string): void {
-    if (this.settingsWatcher) {
-      this.settingsWatcher.dispose();
-    }
+    this.fileWatcherService.unregisterSettingsCallback(SETTINGS_SERVICE_ID);
 
     const settingsUri = vscode.Uri.file(settingsPath);
-    this.settingsWatcher = vscode.workspace.createFileSystemWatcher(settingsUri.fsPath);
-
-    this.settingsWatcher.onDidChange(async () => {
-      try {
-        await this.reloadSettings();
-        this.onSettingsChangedEmitter.fire(this.settings!);
-      } catch (error) {
-        console.error('Failed to reload settings:', error);
-      }
-    });
-
-    this.settingsWatcher.onDidCreate(async () => {
-      try {
-        await this.reloadSettings();
-        this.onSettingsChangedEmitter.fire(this.settings!);
-      } catch (error) {
-        console.error('Failed to reload settings:', error);
-      }
-    });
-
-    this.settingsWatcher.onDidDelete(() => {
-      this.settings = SettingsSchema.parse({});
-      this.onSettingsChangedEmitter.fire(this.settings);
+    
+    this.fileWatcherService.registerSettingsCallback(SETTINGS_SERVICE_ID, {
+      onDidChange: async () => {
+        try {
+          await this.reloadSettings();
+          this.onSettingsChangedEmitter.fire(this.settings!);
+        } catch (error) {
+          console.error('Failed to reload settings:', error);
+        }
+      },
+      onDidCreate: async () => {
+        try {
+          await this.reloadSettings();
+          this.onSettingsChangedEmitter.fire(this.settings!);
+        } catch (error) {
+          console.error('Failed to reload settings:', error);
+        }
+      },
+      onDidDelete: () => {
+        this.settings = SettingsSchema.parse({});
+        this.onSettingsChangedEmitter.fire(this.settings);
+      },
     });
   }
 
   public dispose(): void {
-    if (this.settingsWatcher) {
-      this.settingsWatcher.dispose();
-    }
+    this.fileWatcherService.unregisterSettingsCallback(SETTINGS_SERVICE_ID);
     this.onSettingsChangedEmitter.dispose();
   }
 }

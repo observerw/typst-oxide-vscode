@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { DatabaseService } from "../indexing/dbService";
-import { MetadataExtractor } from "../indexing/metadataExtractor";
 import { PathResolver } from "../utils/pathResolver";
+import { IndexingService } from "./indexingService";
 
 export interface LinkInfo {
   sourceFile: string;
@@ -21,14 +21,12 @@ export interface FileLinks {
 export class LinkDiscovery {
   private static instance: LinkDiscovery;
   private linkCache: Map<string, FileLinks> = new Map();
-  private fileWatcher: vscode.FileSystemWatcher | undefined;
+  private indexingService: IndexingService;
   private dbService: DatabaseService;
-  private metadataExtractor: MetadataExtractor;
 
   private constructor() {
-    this.dbService = DatabaseService.getInstance();
-    this.metadataExtractor = MetadataExtractor.getInstance();
-    this.setupFileWatcher();
+    this.indexingService = IndexingService.getInstance();
+    this.dbService = this.indexingService.getDatabaseService();
   }
 
   public static getInstance(): LinkDiscovery {
@@ -38,25 +36,6 @@ export class LinkDiscovery {
     return LinkDiscovery.instance;
   }
 
-  /**
-   * Sets up file watchers to update database when files change
-   */
-  private setupFileWatcher(): void {
-    this.fileWatcher = vscode.workspace.createFileSystemWatcher("**/*.typ");
-
-    this.fileWatcher.onDidChange(async (uri) => {
-      await this.updateFileInDatabase(uri);
-    });
-
-    this.fileWatcher.onDidCreate(async (uri) => {
-      await this.updateFileInDatabase(uri);
-    });
-
-    this.fileWatcher.onDidDelete(async (uri) => {
-      await this.dbService.deleteFile(uri.fsPath);
-      this.invalidateFile(uri.fsPath);
-    });
-  }
 
   /**
    * Invalidates the entire cache
@@ -70,44 +49,6 @@ export class LinkDiscovery {
    */
   private invalidateFile(filePath: string): void {
     this.linkCache.delete(filePath);
-  }
-
-  /**
-   * Updates a file in the database with fresh metadata
-   */
-  private async updateFileInDatabase(uri: vscode.Uri): Promise<void> {
-    try {
-      const metadata = await this.metadataExtractor.extractMetadata(uri);
-      if (metadata) {
-        await this.dbService.upsertFile({
-          filePath: metadata.filePath,
-          lastModified: metadata.lastModified,
-          metadata: metadata.metadata,
-          aliases: Array.isArray(metadata.metadata?.alias) ? metadata.metadata.alias : [],
-          wikilinks: metadata.wikilinks.map((link) => ({
-            sourceFile: metadata.filePath,
-            targetFile: link.targetFile,
-            label: link.label,
-            alias: link.alias,
-            range: link.range,
-          })),
-          labels: metadata.labels.map((label) => ({
-            name: label.name,
-            filePath: metadata.filePath,
-            position: label.position,
-            type: label.type,
-          })),
-          headings: metadata.headings.map((heading) => ({
-            text: heading.text,
-            level: heading.level,
-            filePath: metadata.filePath,
-            position: heading.position,
-          })),
-        });
-      }
-    } catch (error) {
-      console.error(`Failed to update file in database: ${uri.fsPath}`, error);
-    }
   }
 
   /**
@@ -140,27 +81,7 @@ export class LinkDiscovery {
    * Ensures a file is indexed in the database
    */
   private async ensureFileIndexed(fileUri: vscode.Uri): Promise<void> {
-    try {
-      const filePath = fileUri.fsPath;
-      const isIndexed = await this.dbService.isFileIndexed(filePath);
-
-      if (!isIndexed) {
-        await this.updateFileInDatabase(fileUri);
-      } else {
-        // Check if file has been modified since last indexing
-        const stats = await vscode.workspace.fs.stat(fileUri);
-        const lastIndexed = await this.dbService.getLastModified(filePath);
-
-        if (!lastIndexed || stats.mtime > lastIndexed) {
-          await this.updateFileInDatabase(fileUri);
-        }
-      }
-    } catch (error) {
-      console.error(
-        `Failed to ensure file is indexed: ${fileUri.fsPath}`,
-        error
-      );
-    }
+    await this.indexingService.ensureFileIndexed(fileUri);
   }
 
   /**
@@ -266,7 +187,7 @@ export class LinkDiscovery {
    */
   public async refreshFile(fileUri: vscode.Uri): Promise<void> {
     this.invalidateFile(fileUri.fsPath);
-    await this.updateFileInDatabase(fileUri);
+    await this.indexingService.refreshFile(fileUri);
   }
 
   /**
@@ -274,43 +195,13 @@ export class LinkDiscovery {
    */
   public async refreshAll(): Promise<void> {
     this.invalidateCache();
-    await this.indexWorkspace();
-  }
-
-  /**
-   * Indexes all .typ files in the workspace
-   */
-  public async indexWorkspace(): Promise<void> {
-    try {
-      const allTypstFiles = await vscode.workspace.findFiles(
-        "**/*.typ",
-        "**/node_modules/**"
-      );
-
-      for (const fileUri of allTypstFiles) {
-        await this.updateFileInDatabase(fileUri);
-      }
-    } catch (error) {
-      console.error("Failed to index workspace:", error);
-    }
-  }
-
-  /**
-   * Initializes the indexing system
-   */
-  public async initialize(): Promise<void> {
-    await this.dbService.initialize();
-    await this.indexWorkspace();
+    await this.indexingService.refreshAll();
   }
 
   /**
    * Disposes resources
    */
-  public async dispose(): Promise<void> {
-    if (this.fileWatcher) {
-      this.fileWatcher.dispose();
-    }
+  public dispose(): void {
     this.invalidateCache();
-    await this.dbService.dispose();
   }
 }
